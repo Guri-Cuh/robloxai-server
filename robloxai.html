@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RobloxAI — Your Game Dev Partner</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c28;
+    --accent: #00f5a0;
+    --accent2: #00d9f5;
+    --red: #ff4d6d;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --border: #2a2a3a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(0,245,160,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 80% 80%, rgba(0,217,245,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(12px);
+    position: relative;
+    z-index: 10;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.8); }
+  }
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(0,245,160,0.08);
+    border: 1px solid rgba(0,245,160,0.2);
+    padding: 6px 12px;
+    border-radius: 20px;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .session-info {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .session-code {
+    color: var(--accent2);
+    font-weight: 700;
+  }
+
+  /* Chat area */
+  .chat-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .chat-container::-webkit-scrollbar { width: 4px; }
+  .chat-container::-webkit-scrollbar-track { background: transparent; }
+  .chat-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .message {
+    max-width: 80%;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.user { align-self: flex-end; }
+  .message.ai { align-self: flex-start; }
+
+  .message-bubble {
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .message.user .message-bubble {
+    background: linear-gradient(135deg, rgba(0,245,160,0.15), rgba(0,217,245,0.1));
+    border: 1px solid rgba(0,245,160,0.25);
+    border-bottom-right-radius: 4px;
+  }
+
+  .message.ai .message-bubble {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+  }
+
+  .message-label {
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    margin-bottom: 4px;
+    padding: 0 4px;
+  }
+
+  .message.user .message-label { text-align: right; }
+
+  /* Code block */
+  .code-block {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .code-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-small {
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-copy {
+    background: var(--surface);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-copy:hover { color: var(--text); border-color: var(--text); }
+
+  .btn-send {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000;
+    font-weight: 700;
+  }
+
+  .btn-send:hover { opacity: 0.85; transform: scale(0.97); }
+  .btn-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .code-content {
+    padding: 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: #a8b4c8;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 200px;
+    overflow-y: auto;
+    line-height: 1.5;
+  }
+
+  /* Thinking indicator */
+  .thinking {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    font-size: 13px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .thinking-dots span {
+    display: inline-block;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin: 0 1px;
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+
+  .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  /* Quick prompts */
+  .quick-prompts {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 0 24px 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .quick-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 12px;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .quick-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,245,160,0.06);
+  }
+
+  /* Input area */
+  .input-area {
+    padding: 16px 24px 20px;
+    border-top: 1px solid var(--border);
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(12px);
+    position: relative;
+    z-index: 10;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  textarea {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    min-height: 48px;
+    max-height: 120px;
+    line-height: 1.5;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus { border-color: rgba(0,245,160,0.4); }
+  textarea::placeholder { color: var(--muted); }
+
+  .send-btn {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { transform: scale(0.95); opacity: 0.9; }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    z-index: 100;
+    animation: toastIn 0.3s ease;
+    display: none;
+  }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .welcome {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+
+  .welcome h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .welcome p { font-size: 14px; line-height: 1.6; max-width: 400px; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    RobloxAI
+  </div>
+  <div class="session-info">
+    SESSION: <span class="session-code">STUDIO1</span>
+  </div>
+  <div class="status-badge">
+    <div class="status-dot"></div>
+    Server Live
+  </div>
+</header>
+
+<div class="chat-container" id="chat">
+  <div class="welcome">
+    <h2>Your Roblox Dev Partner 🎮</h2>
+    <p>Ask me to build features, write Luau scripts, or suggest what's trending. I'll send code straight to your Studio!</p>
+  </div>
+</div>
+
+<div class="quick-prompts">
+  <button class="quick-btn" onclick="quickPrompt('Add a coins leaderboard system')">💰 Coins leaderboard</button>
+  <button class="quick-btn" onclick="quickPrompt('Write a checkpoint system for an obby')">🏁 Checkpoint system</button>
+  <button class="quick-btn" onclick="quickPrompt('Add a shop GUI with gems currency')">🛒 Shop GUI</button>
+  <button class="quick-btn" onclick="quickPrompt('What game mechanics are trending on Roblox right now?')">🔥 Trending mechanics</button>
+  <button class="quick-btn" onclick="quickPrompt('Add a day/night cycle script')">🌙 Day/night cycle</button>
+</div>
+
+<div class="input-area">
+  <div class="input-row">
+    <textarea id="userInput" placeholder="Ask me to build something for your Roblox game..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SERVER = "https://robloxai-server-production.up.railway.app";
+const SESSION = "STUDIO1";
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function quickPrompt(text) {
+  document.getElementById('userInput').value = text;
+  sendMessage();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+function renderMarkdown(text) {
+  return text
+    .replace(/### (.*)/g, "<strong style=\"font-size:15px;display:block;margin:10px 0 4px\">$1</strong>")
+    .replace(/## (.*)/g, "<strong style=\"font-size:16px;display:block;margin:12px 0 4px\">$1</strong>")
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`]+)`/g, "<code style=\"background:#0d0d14;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:12px\">$1</code>")
+    .replace(/\n/g, "<br>");
+}
+
+function addMessage(role, content, code) {
+  const chat = document.getElementById('chat');
+  const msg = document.createElement('div');
+  msg.className = `message ${role}`;
+
+  let html = `<div class="message-label">${role === 'user' ? 'YOU' : '🤖 ROBLOXAI'}</div>
+    <div class="message-bubble">${role === 'ai' ? renderMarkdown(content) : escapeHtml(content)}`;
+
+  if (code) {
+    html += `
+      <div class="code-block">
+        <div class="code-header">
+          <span>Luau Script</span>
+          <div class="code-actions">
+            <button class="btn-small btn-copy" onclick="copyCode(this)">Copy</button>
+            <button class="btn-small btn-send" onclick="sendToStudio(this)">⚡ Send to Studio</button>
+          </div>
+        </div>
+        <div class="code-content">${escapeHtml(code)}</div>
+      </div>`;
+  }
+
+  html += `</div>`;
+  msg.innerHTML = html;
+
+  // Store code for later
+  if (code) msg.querySelector('.btn-send').dataset.code = code;
+
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addThinking() {
+  const chat = document.getElementById('chat');
+  const el = document.createElement('div');
+  el.className = 'message ai';
+  el.id = 'thinking';
+  el.innerHTML = `<div class="message-label">🤖 ROBLOXAI</div>
+    <div class="thinking">
+      <div class="thinking-dots"><span></span><span></span><span></span></div>
+      Thinking...
+    </div>`;
+  chat.appendChild(el);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function removeThinking() {
+  const el = document.getElementById('thinking');
+  if (el) el.remove();
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('.code-content').textContent;
+  navigator.clipboard.writeText(code);
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = 'Copy', 2000);
+}
+
+async function sendToStudio(btn) {
+  const code = btn.dataset.code;
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  try {
+    const res = await fetch(`${SERVER}/push`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session: SESSION, script: code })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      btn.textContent = '✅ Sent!';
+      showToast('⚡ Script sent to Studio!');
+    } else {
+      btn.textContent = '❌ Failed';
+    }
+  } catch(e) {
+    btn.textContent = '❌ Error';
+    showToast('Could not reach server');
+  }
+  setTimeout(() => { btn.textContent = '⚡ Send to Studio'; btn.disabled = false; }, 3000);
+}
+
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+
+  addMessage('user', text);
+  addThinking();
+
+  try {
+    const res = await fetch(`${SERVER}/ai`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [{ role: "user", content: text }]
+      })
+    });
+
+    const data = await res.json();
+    removeThinking();
+
+    const fullText = data.text || '';
+    const codeMatch = fullText.match(/<code>([\s\S]*?)<\/code>/);
+    const code = codeMatch ? codeMatch[1].trim() : null;
+    const explanation = fullText.replace(/<code>[\s\S]*?<\/code>/g, '').trim();
+
+    addMessage('ai', explanation || 'Here is your script!', code);
+  } catch(e) {
+    removeThinking();
+    addMessage('ai', 'Sorry, something went wrong. Check your connection and try again.');
+  }
+
+  document.getElementById('sendBtn').disabled = false;
+}
+</script>
+</body>
+</html>
