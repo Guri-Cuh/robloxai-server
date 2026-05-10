@@ -1,0 +1,13 @@
+{
+  "name": "robloxai-server",
+  "version": "1.0.0",
+  "description": "Backend server for RobloxAI Studio plugin bridge",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}
